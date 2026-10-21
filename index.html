@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0b0e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Kommentarliste">
+  <meta name="description" content="TXT-Kommentare abhaken und mit einem Tipp kopieren. Privat und ohne Anmeldung.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" href="./icon-192.png">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <title>Kommentarliste</title>
+  <style>
+    :root {color-scheme: dark; --bg:#0a0b0e; --surface:#111318; --surface2:#181b20; --line:#282b30; --text:#f5f5f4; --muted:#94989e; --accent:#f5c542; --accent-t:#1b1608; --green:#c9e5a4; --radius:17px; font-family: -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif; }
+    * {box-sizing:border-box}
+    html {min-height:100%;background:var(--bg);-webkit-text-size-adjust:100%;}
+    body {min-height:100vh; margin:0; background:var(--bg); color:var(--text); overscroll-behavior-y:contain;}
+    button, input {font:inherit}
+    button {cursor:pointer; -webkit-tap-highlight-color:transparent}
+    button:focus-visible {outline:3px solid #fff;outline-offset:3px}
+    .layout {max-width:740px; margin:0 auto; padding:env(safe-area-inset-top) 20px calc(45px + env(safe-area-inset-bottom));}
+    .topbar {display:flex; align-items:center; justify-content:space-between; gap:12px; padding:25px 0 35px;}
+    .brand {display:flex;align-items:center;gap:11px;min-width:0;}
+    .mark {width:41px;height:41px;border-radius:12px;background:var(--accent);color:#141414;display:grid;place-items:center;flex:none}
+    .brand-label {font-size:15px;font-weight:750;letter-spacing:-.35px;}
+    .brand-sub {font-size:11px;color:var(--muted);margin-top:2px}
+    .round-btn {width:42px;height:42px;border:1px solid var(--line);border-radius:13px;background:var(--surface);color:var(--text);display:grid;place-items:center;flex:none}
+    .round-btn:hover {border-color:#5b5c5e;}
+    .overline {font-size:10px; font-weight:800; letter-spacing:2.8px;color:var(--accent);margin:0 0 9px;}
+    h1 {font-size:clamp(34px,6vw,45px);margin:0; letter-spacing:-2.1px;line-height:1.09;font-weight:800;}
+    .title-second {display:block;}
+    .subtitle {margin:10px 0 0;color:var(--muted);font-size:14px;line-height:1.45;}
+    .stats {display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:26px;}
+    .stat {background:var(--surface);padding:20px 18px 17px;border:1px solid var(--line);border-radius:18px;}
+    .stat .val {font-size:34px;font-weight:780;letter-spacing:-1.4px;font-variant-numeric:tabular-nums;line-height:1.08;}
+    .stat .val.gold {color:var(--accent)}
+    .stat .key {font-size:12px;margin-top:8px;color:var(--muted);font-weight:550}
+    .progressbar {background:#2a2d32;border-radius:999px;height:5px;overflow:hidden;margin:18px 0 0;}
+    .progressbar>span {display:block;width:0%;height:100%;background:var(--accent);border-radius:999px;transition:width .22s ease}
+    .listtop {display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:35px;margin-bottom:14px;}
+    .listtop h2 {font-size:18px;font-weight:720;margin:0;letter-spacing:-.5px;}
+    .listtop p {font-size:12px;color:var(--muted);margin:6px 0 0;max-width:235px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .small-action {border:0;background:none;color:var(--accent);font-size:12px;font-weight:750;padding:10px 0 6px 8px;flex:none}
+    .items {display:flex;flex-direction:column;gap:10px;}
+    .item {background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:11px 13px 11px 11px;display:flex;align-items:center;gap:14px;min-height:87px;}
+    .tick {height:59px;width:59px;flex:0 0 59px;border-radius:14px;border:2px solid #655527;background:#251f12;color:var(--accent);display:grid;place-items:center;transition:transform .1s ease,background .15s ease}
+    .tick:active {transform:scale(.94);background:var(--accent);color:#17140c}
+    .item-info {min-width:0;flex:1;text-align:left;background:transparent;border:0;color:inherit;padding:7px 0;align-self:stretch;display:flex;flex-direction:column;justify-content:center;gap:8px}
+    .num {color:var(--accent);font-size:10px;letter-spacing:1.6px;font-weight:850;font-variant-numeric:tabular-nums;}
+    .preview {color:#e9e9e8;font-size:14px;line-height:1.43;font-weight:470;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
+    .item.expanded .preview {white-space:normal;overflow-wrap:anywhere;}
+    .item.expanded .item-info {justify-content:flex-start}
+    .empty {text-align:center;margin:28px 0 0;padding:44px 22px 46px;border:1px dashed #3a3a3c;border-radius:21px;background:var(--surface);}
+    .empty-icon {width:70px;height:70px;border-radius:19px;background:#262011;color:var(--accent);display:grid;place-items:center;margin:0 auto 21px;}
+    .empty h3 {font-size:20px;letter-spacing:-.6px;margin:0 0 8px}
+    .empty p {font-size:14px;line-height:1.52;color:var(--muted);margin:0 auto 22px;max-width:305px}
+    .primary {padding:13px 21px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#13130f;border:0;border-radius:13px;font-size:14px;font-weight:800;}
+    .primary:active {filter:brightness(.88)}
+    .done-mark {font-size:44px;color:var(--green);margin-bottom:8px}
+    .helper {font-size:12px;color:#767a81;text-align:center;padding:26px 0 0}
+    .toast {position:fixed;left:50%;bottom:calc(21px + env(safe-area-inset-bottom));transform:translate(-50%,16px);background:#f7f5ee;color:#151515;padding:13px 16px;border-radius:14px;box-shadow:0 7px 35px #0009;display:flex;align-items:center;gap:14px;min-width:min(350px,calc(100vw - 32px));max-width:calc(100vw - 32px);opacity:0;pointer-events:none;transition:transform .2s,opacity .2s;z-index:30;font-size:13px;font-weight:650;}
+    .toast.show {opacity:1;transform:translate(-50%,0);pointer-events:auto;}
+    .toast button {border:0;padding:5px 0;background:none;color:#7b5611;font-size:12px;font-weight:850;margin-left:auto;white-space:nowrap}
+    .modal-backdrop {position:fixed;inset:0;background:#0009;z-index:40;display:flex;align-items:flex-end;justify-content:center;padding:0 14px max(14px,env(safe-area-inset-bottom));}
+    .sheet {width:min(100%,600px);background:#1b1d22;border:1px solid #36393f;border-radius:24px;padding:16px 18px 18px;box-shadow:0 15px 50px #0009}
+    .sheet-handle {height:4px;width:39px;background:#535761;border-radius:99px;margin:0 auto 18px}
+    .sheet h2 {font-size:19px;letter-spacing:-.5px;margin:0 0 17px}
+    .sheet-btn {width:100%;border:1px solid #393b41;background:#25272d;padding:16px;text-align:left;color:var(--text);border-radius:13px;margin-bottom:9px;font-size:14px;font-weight:590;}
+    .sheet-btn.warn {color:#ffb5a5}
+    .sheet .quiet {font-size:12px;line-height:1.5;color:var(--muted);margin-top:12px}
+    .sheet-close {border:0;background:none;color:var(--muted);padding:13px 0 4px;width:100%;}
+    .hidden {display:none !important}
+    body.has-data .topbar {padding-top:18px;padding-bottom:19px;}
+    body.has-data .overline {display:none;}
+    body.has-data h1 {font-size:25px;letter-spacing:-.9px;line-height:1.16;}
+    body.has-data .title-second {display:inline;}
+    body.has-data .subtitle {margin-top:7px;font-size:12px;}
+    body.has-data .stats {margin-top:17px;}
+    body.has-data .stat {padding:13px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+    body.has-data .stat .val {font-size:25px;}
+    body.has-data .stat .key {font-size:11px;margin:0;text-align:right;}
+    body.has-data .progressbar {margin-top:13px;}
+    body.has-data .listtop {margin-top:23px;}
+    body.has-data .item {min-height:76px;padding:9px;}
+    body.has-data .tick {width:56px;height:56px;flex-basis:56px;}
+    @media (max-width:390px) {.layout{padding-left:15px;padding-right:15px}.topbar{padding-bottom:29px}.item{gap:11px}.tick{width:56px;height:56px;flex-basis:56px}.stat{padding:18px 14px 15px}}
+    @media (prefers-reduced-motion:reduce) {*,*::before,*::after {animation:none !important;transition:none !important}}
+  </style>
+</head>
+<body>
+  <svg style="position:absolute;width:0;height:0;overflow:hidden" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.6 4.6L19.5 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-menu" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="19" cy="12" r="1.7" fill="currentColor"/></symbol><symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m-4 4 4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" stroke="currentColor" stroke-width="1.9" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></symbol></svg>
+  <main class="layout">
+    <header class="topbar">
+      <div class="brand"><div class="mark"><svg width="23" height="23"><use href="#i-list"/></svg></div><div><div class="brand-label">KOMMENTARLISTE</div><div class="brand-sub">Privat · Lokal gespeichert</div></div></div>
+      <button class="round-btn" type="button" id="menuBtn" aria-label="Menü öffnen"><svg width="21" height="21"><use href="#i-menu"/></svg></button>
+    </header>
+    <section aria-label="Übersicht">
+      <p class="overline">DEIN WORKSPACE</p><h1>Ein Tipp. <span class="title-second">Erledigt<span style="color:var(--accent)">.</span></span></h1>
+      <p class="subtitle">Häkchen antippen: Text kopieren, Eintrag abhaken.</p>
+      <div class="stats"><div class="stat"><div class="val gold" id="remaining">0</div><div class="key">Noch offen</div></div><div class="stat"><div class="val" id="completed">0</div><div class="key">Abgehakt</div></div></div>
+      <div class="progressbar" role="progressbar" aria-label="Fortschritt" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress"><span id="progressFill"></span></div>
+    </section>
+    <section aria-label="Kommentare">
+      <div class="listtop"><div><h2>Deine Kommentare</h2><p id="fileName">Noch keine TXT-Datei geladen</p></div><button type="button" class="small-action" id="importBtn">+ TXT laden</button></div>
+      <div id="items" class="items" aria-live="off"></div>
+      <div id="emptyImport" class="empty hidden"><div class="empty-icon"><svg width="33" height="33"><use href="#i-upload"/></svg></div><h3>Liste importieren</h3><p>Lade deine nummerierte TXT-Datei. Die Kommentare erscheinen sofort als kopierbare Liste.</p><button class="primary" type="button" id="firstImportBtn"><svg width="19" height="19"><use href="#i-upload"/></svg>TXT-Datei auswählen</button></div>
+      <div id="emptyDone" class="empty hidden"><div class="done-mark">✓</div><h3>Alles abgehakt</h3><p>Alle Einträge wurden kopiert und aus der offenen Liste entfernt.</p><button class="primary" type="button" id="newImportBtn">Neue TXT-Datei laden</button></div>
+      <p class="helper" id="helper">Die Datei bleibt nur auf diesem Gerät. Kein Login, kein Server-Upload.</p>
+    </section>
+  </main>
+  <input type="file" id="fileInput" accept=".txt,text/plain" class="hidden" aria-label="TXT-Datei importieren">
+  <div id="toast" class="toast" role="status" aria-live="polite"><span id="toastText">Kopiert</span><button id="undoToast" type="button" class="hidden">Rückgängig</button></div>
+  <div id="menuBackdrop" class="modal-backdrop hidden" role="presentation"><section class="sheet" role="dialog" aria-modal="true" aria-labelledby="menuTitle"><div class="sheet-handle"></div><h2 id="menuTitle">Liste verwalten</h2><button class="sheet-btn" id="menuImport" type="button">Andere TXT-Datei importieren</button><button class="sheet-btn" id="menuExport" type="button">Offene Kommentare als TXT speichern</button><button class="sheet-btn" id="menuUndo" type="button">Letztes Häkchen rückgängig machen</button><button class="sheet-btn warn" id="menuReset" type="button">Alle Einträge wiederherstellen</button><button class="sheet-btn warn" id="menuClear" type="button">Aktuelle Liste entfernen</button><p class="quiet">Alle Kommentare und Häkchen werden ausschließlich im lokalen Speicher dieser Web-App gespeichert. Beim Löschen der Website-Daten kann der Stand verloren gehen.</p><button class="sheet-close" id="closeMenu" type="button">Schließen</button></section></div>
+  <script>
+  (() => {
+    'use strict';
+    const KEY = 'kommentarliste.local.v1';
+    const $ = (s) => document.getElementById(s);
+    const els = { list:$('items'), remaining:$('remaining'), completed:$('completed'), progress:$('progress'), bar:$('progressFill'), filename:$('fileName'), noFile:$('emptyImport'), finished:$('emptyDone'), toast:$('toast'), toastText:$('toastText'), undoToast:$('undoToast'), menu:$('menuBackdrop'), file:$('fileInput') };
+    let state = load();
+    let toastTimer = null;
+    let busy = false;
+    function blank() {return {fileName:'',items:[],done:[]};}
+    function load() {
+      try {const s=JSON.parse(localStorage.getItem(KEY)); if(s && Array.isArray(s.items) && Array.isArray(s.done) && typeof s.fileName==='string' && s.items.every(x => x && typeof x.id==='string' && typeof x.text==='string' && typeof x.number==='string')) return s;}catch(e){}
+      return blank();
+    }
+    function commit(newState) {
+      try {localStorage.setItem(KEY,JSON.stringify(newState));state=newState;return true;}
+      catch(e){notify('Speichern fehlgeschlagen: Prüfe den Gerätespeicher.',false);return false;}
+    }
+    function icon(name, size=23) {const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('width',size);svg.setAttribute('height',size);svg.setAttribute('aria-hidden','true');const use=document.createElementNS('http://www.w3.org/2000/svg','use');use.setAttribute('href','#i-'+name);svg.appendChild(use);return svg;}
+    function notify(msg, canUndo=false) {
+      clearTimeout(toastTimer); els.toastText.textContent=msg;els.undoToast.classList.toggle('hidden',!canUndo);els.toast.classList.add('show');toastTimer=setTimeout(()=>els.toast.classList.remove('show'),4300);
+    }
+    function render() {
+      document.body.classList.toggle('has-data',state.items.length>0);
+      const doneSet=new Set(state.done);
+      const remaining=state.items.filter(x=>!doneSet.has(x.id));
+      els.remaining.textContent=remaining.length.toLocaleString('de-DE');
+      els.completed.textContent=(state.items.length-remaining.length).toLocaleString('de-DE');
+      els.filename.textContent=state.fileName || 'Noch keine TXT-Datei geladen';
+      const percentage=state.items.length?Math.round((state.items.length-remaining.length)/state.items.length*100):0;
+      els.bar.style.width=percentage+'%';els.progress.setAttribute('aria-valuenow',percentage);
+      els.noFile.classList.toggle('hidden',state.items.length!==0);
+      els.finished.classList.toggle('hidden',state.items.length===0 || remaining.length!==0);
+      els.list.replaceChildren();
+      for(const item of remaining) {
+        const card=document.createElement('article');card.className='item';
+        const tick=document.createElement('button');tick.type='button';tick.className='tick';tick.setAttribute('aria-label','Kommentar '+item.number+' kopieren und abhaken');tick.appendChild(icon('check',27));tick.addEventListener('click',()=>copyAndRemove(item.id));
+        const info=document.createElement('button');info.type='button';info.className='item-info';info.setAttribute('aria-label','Kommentar '+item.number+' vollständig anzeigen');info.setAttribute('aria-expanded','false');
+        const number=document.createElement('span');number.className='num';number.textContent='#'+item.number;
+        const snippet=document.createElement('span');snippet.className='preview';snippet.textContent=item.text;snippet.title=item.text;
+        info.append(number,snippet);info.addEventListener('click',()=>{const expanded=card.classList.toggle('expanded');info.setAttribute('aria-expanded',String(expanded));});
+        card.append(tick,info);els.list.appendChild(card);
+      }
+    }
+    function parse(text) {
+      const results=[];const nonempty=text.replace(/^\uFEFF/,'').split(/\r?\n|\r/).map(s=>s.trim()).filter(Boolean);
+      for(const line of nonempty) {
+        const match=line.match(/^(\d{1,5})\s*\|\s*(.+)$/u);
+        const value=(match?match[2]:line).trim();if(!value) continue;
+        results.push({id:String(results.length+1),number:match?match[1].padStart(3,'0'):String(results.length+1).padStart(3,'0'),text:value});
+      }
+      return results;
+    }
+    function openImport() {els.file.value='';els.file.click();}
+    async function onFileChosen(event) {
+      const file=event.target.files?.[0];if(!file)return;
+      if(file.size>3*1024*1024){notify('Datei zu groß (maximal 3 MB).');return;}
+      let items;
+      try {items=parse(await file.text());}catch(e){notify('TXT-Datei konnte nicht gelesen werden.');return;}
+      if(!items.length){notify('Keine Kommentarzeilen in der Datei gefunden.');return;}
+      if(state.items.length && !confirm('Aktuelle Liste durch '+items.length+' neue Kommentare ersetzen? Der bisherige Fortschritt geht verloren.'))return;
+      if(commit({fileName:file.name,items,done:[]})){render();notify(items.length+' Kommentare geladen.');window.scrollTo({top:0,behavior:'smooth'});}
+    }
+    async function clipboardWrite(text) {
+      if(navigator.clipboard && typeof navigator.clipboard.writeText==='function') {
+        try{await navigator.clipboard.writeText(text);return true;}catch(e){}
+      }
+      const t=document.createElement('textarea');t.value=text;t.setAttribute('readonly','');t.style.cssText='position:fixed;left:0;top:0;opacity:0;pointer-events:none';document.body.appendChild(t);
+      t.focus();t.select();t.setSelectionRange(0,t.value.length);
+      let ok=false;try{ok=document.execCommand('copy');}catch(e){}t.remove();return ok;
+    }
+    async function copyAndRemove(id) {
+      if(busy)return;const item=state.items.find(x=>x.id===id);if(!item||state.done.includes(id))return;
+      busy=true;let copied=false;try{copied=await clipboardWrite(item.text);}catch(e){}
+      if(copied) {
+        const done=[...state.done,id];if(commit({...state,done})){render();notify('Kommentar #'+item.number+' kopiert und abgehakt.',true);}
+      }else notify('Kopieren fehlgeschlagen. Der Eintrag bleibt erhalten.');
+      busy=false;
+    }
+    function undo() {if(!state.done.length){notify('Noch nichts zum Rückgängigmachen.');return;}
+      const done=state.done.slice(0,-1);if(commit({...state,done})){render();notify('Letzter Kommentar wiederhergestellt.');}
+    }
+    function menu(open) {els.menu.classList.toggle('hidden',!open);document.body.style.overflow=open?'hidden':'';}
+    function exportRemaining() {
+      const done=new Set(state.done);const left=state.items.filter(x=>!done.has(x.id));if(!left.length){notify('Keine offenen Kommentare vorhanden.');return;}
+      const content='\uFEFF'+left.map(x=>x.number+' | '+x.text).join('\r\n')+'\r\n';const blob=new Blob([content],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');a.href=url;a.download='Kommentare_offen.txt';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
+      notify('Offene Kommentare als TXT bereitgestellt.');
+    }
+    $('menuBtn').addEventListener('click',()=>menu(true));$('closeMenu').addEventListener('click',()=>menu(false));
+    els.menu.addEventListener('click',e=>{if(e.target===els.menu)menu(false)});
+    window.addEventListener('keydown',e=>{if(e.key==='Escape')menu(false)});
+    $('importBtn').addEventListener('click',openImport);$('firstImportBtn').addEventListener('click',openImport);$('newImportBtn').addEventListener('click',openImport);
+    els.file.addEventListener('change',onFileChosen);
+    $('menuImport').addEventListener('click',()=>{menu(false);openImport()});
+    $('menuExport').addEventListener('click',()=>{menu(false);exportRemaining()});
+    $('menuUndo').addEventListener('click',()=>{menu(false);undo()});
+    $('undoToast').addEventListener('click',undo);
+    $('menuReset').addEventListener('click',()=>{menu(false);if(!state.items.length)return;if(confirm('Wirklich alle abgehakten Kommentare wiederherstellen?')){if(commit({...state,done:[]})){render();notify('Alle Einträge wiederhergestellt.');}}});
+    $('menuClear').addEventListener('click',()=>{menu(false);if(!state.items.length)return;if(confirm('Aktuelle Liste samt Fortschritt von diesem Gerät entfernen?')){if(commit(blank())){render();notify('Liste entfernt.');}}});
+    render();
+    if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+  })();
+  </script>
+</body>
+</html>
